@@ -23,6 +23,7 @@ use SwagMigrationAssistant\Migration\Logging\LoggingServiceInterface;
 use SwagMigrationAssistant\Migration\Mapping\Lookup\CountryLookup;
 use SwagMigrationAssistant\Migration\Mapping\Lookup\CountryStateLookup;
 use SwagMigrationAssistant\Migration\Mapping\Lookup\LanguageLookup;
+use SwagMigrationAssistant\Migration\Mapping\Lookup\SalutationLookup;
 use SwagMigrationAssistant\Migration\Mapping\MappingServiceInterface;
 use SwagMigrationAssistant\Migration\MigrationContextInterface;
 use SwagMigrationAssistant\Profile\Shopware\Logging\Log\InvalidEmailAddressLog;
@@ -80,6 +81,7 @@ abstract class CustomerConverter extends ShopwareConverter
         protected readonly CountryLookup $countryLookup,
         protected readonly LanguageLookup $languageLookup,
         protected readonly CountryStateLookup $countryStateLookup,
+        protected readonly SalutationLookup $salutationLookup,
     ) {
         parent::__construct($mappingService, $loggingService);
     }
@@ -98,6 +100,15 @@ abstract class CustomerConverter extends ShopwareConverter
         $oldData = $data;
         $this->runId = $migrationContext->getRunUuid();
         $this->migrationContext = $migrationContext;
+
+        // Added the following lines to handle empty lastname for customer
+        if (empty($data['lastname']) || $data['lastname'] === null) {
+            $data['lastname'] = '-';
+        }
+        
+        if (empty($data['firstname']) || $data['firstname'] === null) {
+            $data['firstname'] = '-';
+        }
 
         $fields = $this->checkForEmptyRequiredDataFields($data, $this->requiredDataFieldKeys);
 
@@ -249,7 +260,11 @@ abstract class CustomerConverter extends ShopwareConverter
 
         $salutationUuid = $this->getSalutation($data['salutation']);
         if ($salutationUuid === null) {
-            return new ConvertStruct(null, $oldData);
+            // Fallback to "Not specified" salutation from Shopware 6
+            $salutationUuid = $this->salutationLookup->get('not_specified', $this->context);
+            if ($salutationUuid === null) {
+                return new ConvertStruct(null, $oldData);
+            }
         }
         $converted['salutationId'] = $salutationUuid;
 
@@ -369,6 +384,25 @@ abstract class CustomerConverter extends ShopwareConverter
         foreach ($originalData['addresses'] as $address) {
             $newAddress = [];
 
+            // Added the following lines to handle empty lastname for customer
+            if (empty($address['lastname']) || $address['lastname'] === null) {
+                $address['lastname'] = '-';
+            }
+            if (empty($address['firstname']) || $address['firstname'] === null) {
+                $address['firstname'] = '-';
+            }
+
+            // Handle empty required address fields
+            if (empty($address['zipcode']) || $address['zipcode'] === null) {
+                $address['zipcode'] = '00000'; // or use a default zipcode
+            }
+            if (empty($address['city']) || $address['city'] === null) {
+                $address['city'] = 'N/A'; // or use a default city name
+            }
+            if (empty($address['street']) || $address['street'] === null) {
+                $address['street'] = 'N/A'; // or use a default street name
+            }
+
             $fields = $this->checkForEmptyRequiredDataFields($address, $this->requiredAddressDataFieldKeys);
             if (!empty($fields)) {
                 $this->loggingService->addLogEntry(new EmptyNecessaryFieldRunLog(
@@ -383,7 +417,11 @@ abstract class CustomerConverter extends ShopwareConverter
 
             $salutationUuid = $this->getSalutation($address['salutation']);
             if ($salutationUuid === null) {
-                continue;
+                // Fallback to "Not specified" salutation from Shopware 6
+                $salutationUuid = $this->salutationLookup->get('not_specified', $this->context);
+                if ($salutationUuid === null) {
+                    continue; // Skip this address if no fallback available
+                }
             }
 
             $addressMapping = $this->mappingService->getOrCreateMapping(
@@ -754,4 +792,5 @@ abstract class CustomerConverter extends ShopwareConverter
 
         return \count($errors) === 0;
     }
+
 }
