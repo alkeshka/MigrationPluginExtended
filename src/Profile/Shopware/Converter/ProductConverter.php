@@ -11,10 +11,13 @@ use Shopware\Core\Content\Product\Aggregate\ProductDownload\ProductDownloadDefin
 use Shopware\Core\Content\Product\Aggregate\ProductVisibility\ProductVisibilityDefinition;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Rule\Container\AndRule;
 use Shopware\Core\Framework\Rule\Container\OrRule;
 use Shopware\Core\Framework\Uuid\Uuid;
+use Shopware\Core\System\SystemConfig\SystemConfigService;
 use SwagMigrationAssistant\Exception\MigrationException;
 use SwagMigrationAssistant\Migration\Converter\ConvertStruct;
 use SwagMigrationAssistant\Migration\DataSelection\DefaultEntities;
@@ -73,6 +76,8 @@ abstract class ProductConverter extends ShopwareConverter
 
     protected ?string $currencyUuid = null;
 
+    private const CONFIG_DEFAULT_TAX_ID = 'SwagMigrationAssistant.config.defaultTax';
+
     public function __construct(
         MappingServiceInterface $mappingService,
         LoggingServiceInterface $loggingService,
@@ -81,6 +86,8 @@ abstract class ProductConverter extends ShopwareConverter
         protected readonly MediaDefaultFolderLookup $mediaFolderLookup,
         protected readonly LanguageLookup $languageLookup,
         protected readonly DeliveryTimeLookup $deliveryTimeLookup,
+        protected readonly SystemConfigService $systemConfig,
+        protected readonly EntityRepository $taxRepository
     ) {
         parent::__construct($mappingService, $loggingService);
     }
@@ -144,6 +151,15 @@ abstract class ProductConverter extends ShopwareConverter
             $this->connectionName = $connection->getName();
         }
 
+        // Fallback tax from plugin config when source tax is missing
+        $defaultTaxId = (string) ($this->systemConfig->get(self::CONFIG_DEFAULT_TAX_ID) ?? '');
+        if ((empty($data['tax']) || !isset($data['tax']['tax'])) && Uuid::isValid($defaultTaxId)) {
+            $fallback = $this->loadTaxArrayById($defaultTaxId);
+            if ($fallback !== null) {
+                $data['tax'] = $fallback;
+            }
+        }
+        
         $fields = $this->checkForEmptyRequiredDataFields($data, $this->requiredDataFieldKeys);
         if (!empty($fields)) {
             $this->loggingService->addLogEntry(new EmptyNecessaryFieldRunLog(
@@ -196,6 +212,23 @@ abstract class ProductConverter extends ShopwareConverter
         $mainMapping = $this->mainMapping['id'] ?? null;
 
         return new ConvertStruct($converted, $returnData, $mainMapping);
+    }
+
+    private function loadTaxArrayById(string $taxId): ?array
+    {
+        $criteria = new Criteria([$taxId]);
+        $criteria->setLimit(1);
+        /** @var \Shopware\Core\System\Tax\TaxEntity|null $tax */
+        $tax = $this->taxRepository->search($criteria, $this->context)->first();
+        if ($tax === null) {
+            return null;
+        }
+
+        return [
+            'id' => $taxId,
+            'tax' => (float) $tax->getTaxRate(),
+            'description' => $tax->getName() ?? 'Tax',
+        ];
     }
 
     /**

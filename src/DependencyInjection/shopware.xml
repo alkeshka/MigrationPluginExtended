@@ -115,6 +115,9 @@
             <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\MediaDefaultFolderLookup"/>
             <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\LanguageLookup"/>
             <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\DeliveryTimeLookup"/>
+            <!-- Adding the System Config Service and the Tax Repository -->
+            <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\SystemConfigService"/>
+            <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\TaxRepository"/>
         </service>
 
         <service id="SwagMigrationAssistant\Profile\Shopware\Converter\ProductOptionRelationConverter"
