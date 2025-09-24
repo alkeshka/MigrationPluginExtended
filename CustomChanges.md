@@ -17,6 +17,8 @@
         [ Line 165 ]
     - Added 'SystemConfig' and 'Tax.repository' in the ProductConverter argument
         [ Lines 119 - 120 ]
+    - Added 'SalutationLookup' in the OrderConverter argument
+        [ Line 179 ]
 
 ## config.xml
 
@@ -39,3 +41,10 @@
         NumberRange-Entity with source id "926" could not be converted because of unsupported type: sSERVICE1.
     - Please add the TYPE_MAPPING as needed for your project
 
+## OrderConverter.php
+
+    - Added 1970-01-01 00:00:00 as default date when there is no valid dateTime
+        [ Lines 238 - 241 ]
+    - Added the code to handle empty last and first name, zipcode, city and street
+        [ Lines 518 - 534 ]
+    - Added the constructor parameter for Salutation Lookup

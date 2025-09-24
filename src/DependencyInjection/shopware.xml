@@ -176,6 +176,8 @@
             <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\CurrencyLookup"/>
             <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\LanguageLookup"/>
             <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\CountryStateLookup"/>
+            <!-- Added to use the salutation lookup in the CustomerConverter -->
+            <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\SalutationLookup"/>
         </service>
 
         <service id="SwagMigrationAssistant\Profile\Shopware\Converter\OrderDocumentConverter"

@@ -35,6 +35,7 @@ use SwagMigrationAssistant\Migration\Mapping\Lookup\CountryLookup;
 use SwagMigrationAssistant\Migration\Mapping\Lookup\CountryStateLookup;
 use SwagMigrationAssistant\Migration\Mapping\Lookup\CurrencyLookup;
 use SwagMigrationAssistant\Migration\Mapping\Lookup\LanguageLookup;
+use SwagMigrationAssistant\Migration\Mapping\Lookup\SalutationLookup;
 use SwagMigrationAssistant\Migration\Mapping\MappingServiceInterface;
 use SwagMigrationAssistant\Migration\MigrationContextInterface;
 use SwagMigrationAssistant\Profile\Shopware\Premapping\OrderDeliveryStateReader;
@@ -101,6 +102,7 @@ abstract class OrderConverter extends ShopwareConverter
         protected readonly CurrencyLookup $currencyLookup,
         protected readonly LanguageLookup $languageLookup,
         protected readonly CountryStateLookup $countryStateLookup,
+        protected readonly SalutationLookup $salutationLookup,
     ) {
         parent::__construct($mappingService, $loggingService);
     }
@@ -234,6 +236,11 @@ abstract class OrderConverter extends ShopwareConverter
             'roundForNet' => true,
         ];
         $converted['totalRounding'] = $converted['itemRounding'];
+
+        if (!isset($data['ordertime']) || !$this->validDate((string) $data['ordertime'])) {
+            // Avoid '0000-00-00 00:00:00' (invalid in strict SQL); use a real default
+            $data['ordertime'] = '1970-01-01 00:00:00';
+        }
 
         $this->convertValue($converted, 'orderDateTime', $data, 'ordertime', self::TYPE_DATETIME);
 
@@ -510,6 +517,24 @@ abstract class OrderConverter extends ShopwareConverter
      */
     protected function getAddress(array $originalData, string $type = self::BILLING_ADDRESS): array
     {
+        if (empty($originalData['lastname']) || $originalData['lastname'] === null) {
+            $originalData['lastname'] = '-';
+        }
+
+        if (empty($originalData['firstname']) || $originalData['firstname'] === null) {
+            $originalData['firstname'] = '-';
+        }
+
+        if (empty($originalData['zipcode']) || $originalData['zipcode'] === null) {
+            $originalData['zipcode'] = '00000'; // or use a default zipcode
+        }
+        if (empty($originalData['city']) || $originalData['city'] === null) {
+            $originalData['city'] = 'N/A'; // or use a default city name
+        }
+        if (empty($originalData['street']) || $originalData['street'] === null) {
+            $originalData['street'] = 'N/A'; // or use a default street name
+        }
+
         $fields = $this->checkForEmptyRequiredDataFields($originalData, $this->requiredAddressDataFieldKeys);
         if (!empty($fields)) {
             $this->loggingService->addLogEntry(new EmptyNecessaryFieldRunLog(
@@ -546,8 +571,13 @@ abstract class OrderConverter extends ShopwareConverter
 
         $salutationUuid = $this->getSalutation($originalData['salutation']);
         if ($salutationUuid === null) {
-            return [];
+            // Fallback to "Not specified" salutation from Shopware 6
+            $salutationUuid = $this->salutationLookup->get('not_specified', $this->context);
+            if ($salutationUuid === null) {
+                return []; // Skip this address if no fallback available
+            }
         }
+
         $address['salutationId'] = $salutationUuid;
 
         $this->convertValue($address, 'firstName', $originalData, 'firstname');
