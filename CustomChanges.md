@@ -31,3 +31,11 @@
     - Added a new function for getting the default tax details using the tax repository
         [ Lines 217 - 232 ]
     
+## NumberRangeConverter.php
+
+    - For the following error 
+        [info] SWAG_MIGRATION__SHOPWARE_UNSUPPORTED_NUMBER_RANGE_TYPE
+        Unsupported number range type
+        NumberRange-Entity with source id "926" could not be converted because of unsupported type: sSERVICE1.
+    - Please add the TYPE_MAPPING as needed for your project
+
