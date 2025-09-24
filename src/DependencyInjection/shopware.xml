@@ -116,8 +116,8 @@
             <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\LanguageLookup"/>
             <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\DeliveryTimeLookup"/>
             <!-- Adding the System Config Service and the Tax Repository -->
-            <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\SystemConfigService"/>
-            <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\TaxRepository"/>
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
+            <argument type="service" id="tax.repository"/>
         </service>
 
         <service id="SwagMigrationAssistant\Profile\Shopware\Converter\ProductOptionRelationConverter"
