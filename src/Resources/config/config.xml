@@ -12,5 +12,10 @@
             <helpText>Enter the Id of the tax that can be used when the tax is null.</helpText>
         </input-field>
 
+        <input-field type="text">
+            <name>defaultManufacturer</name>
+            <label>Default Manufacturer Id</label>
+            <helpText>Enter the Id of the manufacturer that can be used when the manufacturer is missing.</helpText>
+        </input-field>
     </card>
 </config>

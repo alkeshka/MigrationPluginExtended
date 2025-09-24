@@ -77,6 +77,7 @@ abstract class ProductConverter extends ShopwareConverter
     protected ?string $currencyUuid = null;
 
     private const CONFIG_DEFAULT_TAX_ID = 'SwagMigrationAssistant.config.defaultTax';
+    private const CONFIG_DEFAULT_MANUFACTURER_ID = 'SwagMigrationAssistant.config.defaultManufacturer';
 
     public function __construct(
         MappingServiceInterface $mappingService,
@@ -87,7 +88,8 @@ abstract class ProductConverter extends ShopwareConverter
         protected readonly LanguageLookup $languageLookup,
         protected readonly DeliveryTimeLookup $deliveryTimeLookup,
         protected readonly SystemConfigService $systemConfig,
-        protected readonly EntityRepository $taxRepository
+        protected readonly EntityRepository $taxRepository,
+        protected readonly EntityRepository $manufacturerRepository
     ) {
         parent::__construct($mappingService, $loggingService);
     }
@@ -402,6 +404,15 @@ abstract class ProductConverter extends ShopwareConverter
         if (isset($data['manufacturer'])) {
             $converted['manufacturer'] = $this->getManufacturer($data['manufacturer']);
             unset($data['manufacturer'], $data['supplierID']);
+        } else {
+            // Fallback to default manufacturer from config when manufacturer is missing
+            $defaultManufacturerId = (string) ($this->systemConfig->get(self::CONFIG_DEFAULT_MANUFACTURER_ID) ?? '');
+            if (Uuid::isValid($defaultManufacturerId)) {
+                $fallback = $this->loadManufacturerArrayById($defaultManufacturerId);
+                if ($fallback !== null) {
+                    $converted['manufacturer'] = $this->getManufacturer($fallback);
+                }
+            }
         }
 
         if (isset($data['mainCategories'])) {
@@ -550,6 +561,25 @@ abstract class ProductConverter extends ShopwareConverter
         }
 
         return $converted;
+    }
+
+    private function loadManufacturerArrayById(string $manufacturerId): ?array
+    {
+        $criteria = new Criteria([$manufacturerId]);
+        $criteria->setLimit(1);
+        $criteria->addAssociation('translations');
+        /** @var \Shopware\Core\Content\Product\ProductManufacturer\ProductManufacturerEntity|null $manufacturer */
+        $manufacturer = $this->manufacturerRepository->search($criteria, $this->context)->first();
+        if ($manufacturer === null) {
+            return null;
+        }
+
+        return [
+            'id' => $manufacturerId,
+            'name' => $manufacturer->getName() ?? 'Default Manufacturer',
+            'description' => $manufacturer->getDescription() ?? '',
+            'link' => $manufacturer->getLink() ?? '',
+        ];
     }
 
     /**

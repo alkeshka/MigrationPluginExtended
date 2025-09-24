@@ -15,14 +15,15 @@
 
     - Added 'SalutationLookup' in the CustomerConverter argument
         [ Line 165 ]
-    - Added 'SystemConfig' and 'Tax.repository' in the ProductConverter argument
-        [ Lines 119 - 120 ]
+    - Added 'SystemConfig', 'Tax.repository' and 'product_manufacturer.repository' in the ProductConverter argument
+        [ Lines 119 - 121 ]
     - Added 'SalutationLookup' in the OrderConverter argument
         [ Line 179 ]
 
 ## config.xml
 
-    - Created a new config filed for the default tax field
+    - Created a new config field for the default tax
+    - Created a new config field for default Manufacture
 
 ## ProductConverter
 
@@ -32,6 +33,10 @@
         [ Lines 153 - 161 ]
     - Added a new function for getting the default tax details using the tax repository
         [ Lines 217 - 232 ]
+    - Added a new for getting the default manufacture details using product_manufacture repository
+        [ Lines 565 - 585 ]
+    - Added the manufacture id fallback
+        [ Lines 404 - 414 ]
     
 ## NumberRangeConverter.php
 

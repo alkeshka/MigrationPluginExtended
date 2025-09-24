@@ -118,6 +118,7 @@
             <!-- Adding the System Config Service and the Tax Repository -->
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
             <argument type="service" id="tax.repository"/>
+            <argument type="service" id="product_manufacturer.repository"/>
         </service>
 
         <service id="SwagMigrationAssistant\Profile\Shopware\Converter\ProductOptionRelationConverter"
