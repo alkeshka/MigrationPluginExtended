@@ -110,10 +110,29 @@ abstract class ShopwareConverter extends Converter
         return $emptyFields;
     }
 
+    // protected function validDate(string $value): bool
+    // {
+    //     try {
+    //         new \DateTime($value);
+
+    //         return true;
+    //     } catch (\Exception $e) {
+    //         return false;
+    //     }
+    // }
     protected function validDate(string $value): bool
     {
         try {
-            new \DateTime($value);
+            $dateTime = new \DateTime($value);
+
+            // Check if the date is within MySQL's valid range
+            // MySQL DATETIME range: '1000-01-01 00:00:00' to '9999-12-31 23:59:59'
+            $minDate = new \DateTime('1000-01-01 00:00:00');
+            $maxDate = new \DateTime('9999-12-31 23:59:59');
+
+            if ($dateTime < $minDate || $dateTime > $maxDate) {
+                return false;
+            }
 
             return true;
         } catch (\Exception $e) {

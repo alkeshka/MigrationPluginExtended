@@ -37,7 +37,9 @@
         [ Lines 565 - 585 ]
     - Added the manufacture id fallback
         [ Lines 404 - 414 ]
-    
+    - Added the created at date fallback
+        [ Lines 488 - 492 ]
+
 ## NumberRangeConverter.php
 
     - For the following error 
@@ -53,3 +55,8 @@
     - Added the code to handle empty last and first name, zipcode, city and street
         [ Lines 518 - 534 ]
     - Added the constructor parameter for Salutation Lookup
+
+## ShopwareConverter.php
+
+    - Replaced the validDate function to handle the invalid date situation
+        [ Lines 113 - 141 ] 

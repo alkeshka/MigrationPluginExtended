@@ -485,6 +485,16 @@ abstract class ProductConverter extends ShopwareConverter
             unset($data['active']);
         }
 
+        if (!isset($data['datum']) || !$this->validDate((string) $data['datum'])) {
+            // Avoid '0000-00-00 00:00:00' (invalid in strict SQL); use a real default
+            $data['datum'] = '1970-01-01 00:00:00';
+        }
+
+        if (!isset($data['detail']['releasedate']) || !$this->validDate((string) $data['detail']['releasedate'])) {
+            // Avoid '0000-00-00 00:00:00' (invalid in strict SQL); use a real default
+            $data['detail']['releasedate'] = '1970-01-01 00:00:00';
+        }
+
         $this->convertValue($converted, 'createdAt', $data, 'datum', self::TYPE_DATETIME);
         $this->convertValue($converted, 'isCloseout', $data, 'laststock', self::TYPE_BOOLEAN);
         $this->convertValue($converted, 'markAsTopseller', $data, 'topseller', self::TYPE_BOOLEAN);
