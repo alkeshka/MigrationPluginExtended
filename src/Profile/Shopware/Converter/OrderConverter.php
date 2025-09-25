@@ -683,6 +683,16 @@ abstract class OrderConverter extends ShopwareConverter
         if (!isset($oldAddressData['stateID'])) {
             return [];
         }
+        if (
+            !isset($oldAddressData['stateID']) ||
+            $oldAddressData['stateID'] === '0' ||
+            $oldAddressData['stateID'] === 0 ||
+            $oldAddressData['stateID'] === '' ||
+            $oldAddressData['stateID'] === null
+        ) {
+            // $fallback = $this->getFallbackCountryState($newCountryId);
+            return $fallback ?? []; // returns an assigned state if available
+        }
 
         $state = ['countryId' => $newCountryId];
 

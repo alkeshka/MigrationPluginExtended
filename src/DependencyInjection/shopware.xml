@@ -167,6 +167,9 @@
             <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\CountryStateLookup"/>
             <!-- Added to use the salutation lookup in the CustomerConverter -->
             <argument type="service" id="SwagMigrationAssistant\Migration\Mapping\Lookup\SalutationLookup"/>
+            <!-- Added for default customer group fallback -->
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
+            <argument type="service" id="customer_group.repository"/>
         </service>
 
         <service id="SwagMigrationAssistant\Profile\Shopware\Converter\OrderConverter"

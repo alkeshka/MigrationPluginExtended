@@ -17,5 +17,11 @@
             <label>Default Manufacturer Id</label>
             <helpText>Enter the Id of the manufacturer that can be used when the manufacturer is missing.</helpText>
         </input-field>
+
+        <input-field type="text">
+            <name>defaultCustomerGroup</name>
+            <label>Default Customer Group Id</label>
+            <helpText>Enter the Id of the customer group to use when a customer's group is missing or unmapped.</helpText>
+        </input-field>
     </card>
 </config>

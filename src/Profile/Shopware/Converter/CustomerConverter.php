@@ -13,6 +13,8 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\Log\Package;
+use Shopware\Core\Framework\Uuid\Uuid;
+use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Core\System\SalesChannel\SalesChannelCollection;
 use SwagMigrationAssistant\Migration\Converter\ConvertStruct;
 use SwagMigrationAssistant\Migration\DataSelection\DefaultEntities;
@@ -70,6 +72,8 @@ abstract class CustomerConverter extends ShopwareConverter
 
     protected string $connectionName;
 
+    private const CONFIG_DEFAULT_CUSTOMER_GROUP_ID = 'SwagMigrationAssistant.config.defaultCustomerGroup';
+
     /**
      * @param EntityRepository<SalesChannelCollection> $salesChannelRepository
      */
@@ -82,6 +86,8 @@ abstract class CustomerConverter extends ShopwareConverter
         protected readonly LanguageLookup $languageLookup,
         protected readonly CountryStateLookup $countryStateLookup,
         protected readonly SalutationLookup $salutationLookup,
+        protected readonly SystemConfigService $systemConfig,
+        protected readonly EntityRepository $customerGroupRepository,
     ) {
         parent::__construct($mappingService, $loggingService);
     }
@@ -108,6 +114,11 @@ abstract class CustomerConverter extends ShopwareConverter
         
         if (empty($data['firstname']) || $data['firstname'] === null) {
             $data['firstname'] = '-';
+        }
+
+        // Prefill missing customer group from config before required fields check
+        if ((empty($data['customerGroupId']) || !isset($data['customerGroupId'])) && ($this->getDefaultCustomerGroupId() !== null)) {
+            $data['customerGroupId'] = '__use_default_customer_group__';
         }
 
         $fields = $this->checkForEmptyRequiredDataFields($data, $this->requiredDataFieldKeys);
@@ -215,14 +226,21 @@ abstract class CustomerConverter extends ShopwareConverter
         $mapping = $this->mappingService->getMapping(
             $this->connectionId,
             DefaultEntities::CUSTOMER_GROUP,
-            $data['customerGroupId'],
+            $data['customerGroupId'] === '__use_default_customer_group__' ? 'default' : $data['customerGroupId'],
             $context
         );
         if ($mapping === null) {
-            return new ConvertStruct(null, $oldData);
+            $defaultGroupId = $this->getDefaultCustomerGroupId();
+            if ($defaultGroupId !== null) {
+                // Assign configured default customer group directly
+                $converted['groupId'] = $defaultGroupId;
+            } else {
+                return new ConvertStruct(null, $oldData);
+            }
+        } else {
+            $converted['groupId'] = $mapping['entityUuid'];
+            $this->mappingIds[] = $mapping['id'];
         }
-        $converted['groupId'] = $mapping['entityUuid'];
-        $this->mappingIds[] = $mapping['id'];
         unset($data['customerGroupId'], $data['customergroup']);
 
         if (isset($data['defaultpayment']['id'])) {
@@ -791,6 +809,23 @@ abstract class CustomerConverter extends ShopwareConverter
         );
 
         return \count($errors) === 0;
+    }
+
+    private function getDefaultCustomerGroupId(): ?string
+    {
+        $configured = (string) ($this->systemConfig->get(self::CONFIG_DEFAULT_CUSTOMER_GROUP_ID) ?? '');
+        if (!Uuid::isValid($configured)) {
+            return null;
+        }
+
+        $criteria = new Criteria([$configured]);
+        $criteria->setLimit(1);
+        $entity = $this->customerGroupRepository->search($criteria, $this->context)->first();
+        if ($entity === null) {
+            return null;
+        }
+
+        return $configured;
     }
 
 }

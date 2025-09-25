@@ -8,8 +8,14 @@
         [ Lines 389 - 398 ]
     - Added code to handle empty Salutations and set the not_specified as default 
         [ Lines 264 - 268 & 420 - 424 ]
-    - Added new parameter to the constructor [ SalutationLookup ]
+    - Added new parameter to the constructor [ SalutationLookup, SystemConfigService, CustomerGroupRepository ]
         [ Line 84 ]
+    - Added a new function for handling the customer group missing issue
+        [ Lines 814 - 831 ]
+    - Added if condition to Prefill missing customer group from config before required fields check
+        [ Lines 119 - 122 ]
+    - Updated function to set default group id
+        [ Lines 232 - 243 ]
 
 ## shopware.xml
 
@@ -55,6 +61,8 @@
     - Added the code to handle empty last and first name, zipcode, city and street
         [ Lines 518 - 534 ]
     - Added the constructor parameter for Salutation Lookup
+    - Updated the if condition to skip the countryStateId 0
+        [ Lines 686 - 695 ]
 
 ## ShopwareConverter.php
 
