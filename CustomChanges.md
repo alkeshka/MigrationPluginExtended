@@ -59,4 +59,10 @@
 ## ShopwareConverter.php
 
     - Replaced the validDate function to handle the invalid date situation
-        [ Lines 113 - 141 ] 
+        [ Lines 113 - 141 ]
+
+## NewsletterRecipientConverter.php
+    
+    - Added default value for _locale and shopId
+        [ Lines 60 - 68 ]
+        Set the _local to English and shopId to 1 Please change according

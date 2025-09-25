@@ -56,6 +56,16 @@ abstract class NewsletterRecipientConverter extends ShopwareConverter
         MigrationContextInterface $migrationContext,
     ): ConvertStruct {
         $this->runId = $migrationContext->getRunUuid();
+
+        // Add fallback values for missing required fields
+        if (empty($data['_locale']) || $data['_locale'] === null) {
+            $data['_locale'] = 'en-GB'; // or whatever your default locale is
+        }
+
+        if (empty($data['shopId']) || $data['shopId'] === null) {
+            $data['shopId'] = '1'; // or whatever your default shop ID is
+        }
+
         $fields = $this->checkForEmptyRequiredDataFields($data, $this->requiredDataFieldKeys);
 
         if (!empty($fields)) {
